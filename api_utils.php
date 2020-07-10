@@ -1,5 +1,7 @@
 <?php
 
+error_reporting(E_ALL);
+
 //----------------------------------------------------------------------------------------
 // Does URL exist?
 function api_head($url, $userAgent = '', $content_type = '')

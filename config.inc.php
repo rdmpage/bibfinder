@@ -1,5 +1,6 @@
 <?php
 
+error_reporting(E_ALL);
 
 global $config;
 
@@ -18,8 +19,8 @@ switch ($site)
 {
 	case 'heroku':
 		// Server-------------------------------------------------------------------------
-		$config['web_server']	= 'https://pid-demonstrator.herokuapp.com'; 
-		$config['site_name']	= 'PID Demonstrator';
+		$config['web_server']	= 'https://bibfinder.herokuapp.com'; 
+		$config['site_name']	= 'BibFinder';
 
 		// Files--------------------------------------------------------------------------
 		$config['web_dir']		= dirname(__FILE__);
