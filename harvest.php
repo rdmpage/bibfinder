@@ -337,11 +337,12 @@ $guids = array(
 '10.3969/j.issn.1005-9628.2004.02.011',
 );
 
+
+
 // PDF no URL
 $guids=array('https://lkcnhm.nus.edu.sg/app/uploads/2017/06/61rbz097-102.pdf');
 
-
-if (1)
+if (0)
 {
 	// datacite or medra DOIs
 	$source = 'datacite';
@@ -354,8 +355,19 @@ if (1)
 		);
 }
 
-foreach ($guids as $guid)
+// Load from file
+$source 	= 'local';
+$filename 	= 'source.txt';
+$filename 	= 'sources/taiwania.txt';
+$filename 	= 'sources/0001-6799.txt';
+$filename 	= 'sources/1681-5556.txt';
+$filename 	= 'sources/0289-3568.txt';
+
+$file_handle = fopen($filename, "r");
+while (!feof($file_handle)) 
 {
+	$guid = trim(fgets($file_handle));
+
 	$obj = null;
 	
 	switch ($source)
@@ -367,6 +379,7 @@ foreach ($guids as $guid)
 			$obj = json_decode($json);
 			break;
 			
+		case 'local':
 		case 'unknown':
 		default:
 			$url = '';

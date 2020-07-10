@@ -102,6 +102,8 @@ function balance(string) {
 					
 						<!-- work -->
 						<div class="col s12 m10">
+						
+							<!-- heading with link and formatted URL -->
 							<div>
 								<% if (item.dataFeedElement[i].url) { %>
 									<a href="<%= item.dataFeedElement[i].url %>">								
@@ -134,7 +136,15 @@ function balance(string) {
 							<% } %>
 					
 							<div style="color:rgb(66,66,66);font-size:12px;margin-top:0.5em;margin-bottom:1em;">			
-									<%- item.dataFeedElement[i].description %>
+							   <% 
+							   		var description = item.dataFeedElement[i].description;
+							   		var length = description.length;
+							   		if (length > 399) {
+							   			description = description.substring(0, 399) + '…';
+							   		}
+							   	%>
+							   		
+								<%- description %>
 							</div>
 					
 							<div>
