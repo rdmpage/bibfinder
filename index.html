@@ -90,13 +90,50 @@ function balance(string) {
 						<div class="col s12 m2 hide-on-small-only" style="text-align:center">
 						    						    
 						    <%
-						    var thumbnailUrl = "https://via.placeholder.com/80x100";
+						    var thumbnailUrl = "";
+						    var logoUrl = "";
+						    
+						    
 						    if (item.dataFeedElement[i].thumbnailUrl) {
 						    	thumbnailUrl = item.dataFeedElement[i].thumbnailUrl;
 						    }
-						    %>
 						    
-							<img class="z-depth-1" style="background:white;" height="100" src="<%- thumbnailUrl %>">
+						    // logo
+						    if (thumbnailUrl == "") {
+						    	if (item.dataFeedElement[i].url) {
+						    	
+						    		if (item.dataFeedElement[i].url.match(/tandfonline/)) {
+						    			logoUrl = "images/logos/tandf.svg";
+						    		}
+						    		
+						    		// airiti
+						    		if (item.dataFeedElement[i].url.match(/airitilibrary/)) {
+						    			logoUrl = "images/logos/airiti.svg";
+						    		}
+						    		
+						    		// jstor
+						    		if (item.dataFeedElement[i].url.match(/jstor/)) {
+						    			logoUrl = "images/logos/jstor.svg";
+						    		}
+						    		
+						    		// https://doi.org/10.18942/bunruichiri.KJ00001078485
+						    		if (item.dataFeedElement[i].url.match(/10.18942/)) {
+						    			logoUrl = "images/logos/jstage.svg";
+						    		}
+						    			
+						    	}
+						    
+						    }
+						    
+						    if (thumbnailUrl == "") {
+						    	thumbnailUrl = "https://via.placeholder.com/80x100";
+						    }
+						    
+						    if (logoUrl != "") { %>	
+						    	<img style="opacity: 0.4;" height="48" src="<%- logoUrl %>">						    
+						    <% } else { %>					    
+						    	<img class="z-depth-1" style="background:white;" height="100" src="<%- thumbnailUrl %>">
+						    <% } %>
 						</div>
 					
 					
