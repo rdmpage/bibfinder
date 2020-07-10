@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>ALEC</title>	
+	
+
+	
+	<!--Import Google Icon Font-->
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.css">
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.js"></script>
+    
+    	<style>
+	a {
+		color:rgb(21,0,155);
+	}
+	</style>
+
+   <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	
+	<script src="https://cdn.jsdelivr.net/npm/ejs@2.6.1/ejs.min.js" integrity="sha256-ZS2YSpipWLkQ1/no+uTJmGexwpda/op53QxO/UBJw4I=" crossorigin="anonymous"></script>	
+
+	<!-- <script src="js/jquery-1.11.2.min.js"></script> -->
+	<!-- <script src="js/ejs.js"></script> -->
+	
+	
+	
+	<script>
+	
+	// https://osric.com/chris/accidental-developer/2012/11/balancing-tags-in-html-and-xhtml-excerpts/
+	
+// balance:
+// - takes an excerpted or truncated XHTML string
+// - returns a well-balanced XHTML string
+function balance(string) {
+  // Check for broken tags, e.g. <stro
+  // Check for a < after the last >, indicating a broken tag
+  if (string.lastIndexOf("<") > string.lastIndexOf(">")) {
+    // Truncate broken tag
+    string = string.substring(0,string.lastIndexOf("<"));
+  }
+
+  // Check for broken elements, e.g. &lt;strong&gt;Hello, w
+  // Get an array of all tags (start, end, and self-closing)
+  var tags = string.match(/<[^>]+>/g);
+  var stack = new Array();
+  for (tag in tags) {
+    if (tags[tag].search("/") <= 0) {
+      // start tag -- push onto the stack
+      stack.push(tags[tag]);
+    } else if (tags[tag].search("/") == 1) {
+      // end tag -- pop off of the stack
+      stack.pop();
+    } else {
+      // self-closing tag -- do nothing
+    }
+  }
+
+  // stack should now contain only the start tags of the broken elements,
+  // the most deeply-nested start tag at the top
+  while (stack.length > 0) {
+    // pop the unmatched tag off the stack
+    var endTag = stack.pop();
+    // get just the tag name
+    endTag = endTag.substring(1,endTag.search(/[ >]/));
+    // append the end tag
+    string += "</" + endTag + ">";
+  }
+
+  // Return the well-balanced XHTML string
+  return(string);
+}	
+	</script>	
+
+	<script>
+	
+        //--------------------------------------------------------------------------------
+		var template_results = `
+		
+			<% item = item['@graph'][0]; %>
+			
+			<div>
+			
+				<% for (var i in item.dataFeedElement) { %>
+					<div class="row" style="margin-bottom:4em;">
+					
+						<!-- thumbnail -->
+						<div class="col s12 m2 hide-on-small-only" style="text-align:center">
+						    						    
+						    <%
+						    var thumbnailUrl = "https://via.placeholder.com/80x100";
+						    if (item.dataFeedElement[i].thumbnailUrl) {
+						    	thumbnailUrl = item.dataFeedElement[i].thumbnailUrl;
+						    }
+						    %>
+						    
+							<img class="z-depth-1" style="background:white;" height="100" src="<%- thumbnailUrl %>">
+						</div>
+					
+					
+						<!-- work -->
+						<div class="col s12 m10">
+							<div>
+								<% if (item.dataFeedElement[i].url) { %>
+									<a href="<%= item.dataFeedElement[i].url %>">								
+								<% } %>
+							
+								<span style="font-size:1.5em;line-height:1.2em;">
+								<%- balance(item.dataFeedElement[i].name) %>
+								</span>
+								<% if (item.dataFeedElement[i].url) { 
+									var url = item.dataFeedElement[i].url;
+									url = url.replace(/https?:\\\/\\\//, '');
+									url = url.replace(/\\\//g, " > ");
+								
+								%>
+									<br>
+									<span style="color:rgb(11,86,25);"><%= url %></span>
+									</a>								
+								<% } %>
+								
+							</div>
+							
+							<% if (item.dataFeedElement[i].creator) { %>
+								<div>
+									<% for (var j in item.dataFeedElement[i].creator) { %>
+										<div class="chip">
+											<%- item.dataFeedElement[i].creator[j] %>
+										</div>
+									<% } %>
+								</div>
+							<% } %>
+					
+							<div style="color:rgb(66,66,66);font-size:12px;margin-top:0.5em;margin-bottom:1em;">			
+									<%- item.dataFeedElement[i].description %>
+							</div>
+					
+							<div>
+							
+								<% if (item.dataFeedElement[i].numberOfItems > 1)  {%>
+									<span class="badge new" data-badge-caption="versions"><%- item.dataFeedElement[i].numberOfItems %></span>					
+								<% } %>
+
+					
+				
+						
+
+							<% if (item.dataFeedElement[i].encoding)  {
+							      for (var j in item.dataFeedElement[i].encoding) {
+							         if (item.dataFeedElement[i].encoding[j].encodingFormat == 'application/pdf') { %>
+							         	<a class="btn" href="<%- item.dataFeedElement[i].encoding[j].url %>" target="_new"><i class="material-icons left">picture_as_pdf</i>View</a>
+							    	<%
+							         }							      
+								}
+							} %>	
+							
+							<% if (item.dataFeedElement[i].doi)  {%>
+								<a class="btn" href="https://doi.org/<%- item.dataFeedElement[i].doi %>">DOI:<%- item.dataFeedElement[i].doi %></a>
+							<% } %>											
+
+							<% if (item.dataFeedElement[i].handle)  {%>
+								<a class="btn" href="https://hdl.handle.net/<%- item.dataFeedElement[i].handle %>">HDL:<%- item.dataFeedElement[i].handle %></a>
+							<% } %>	
+
+							<% if (item.dataFeedElement[i].jstor)  {%>
+								<a class="btn" href="https://www.jstor.org/stable/<%- item.dataFeedElement[i].jstor %>">JSTOR:<%- item.dataFeedElement[i].jstor %></a>
+							<% } %>	
+
+
+							<% if (item.dataFeedElement[i].wikidata)  {%>
+								<a class="btn" href="https://www.wikidata.org/wiki/<%- item.dataFeedElement[i].wikidata %>">WIKIDATA:<%- item.dataFeedElement[i].jstor %></a>
+							<% } %>	
+							
+							
+							
+							</div>
+							
+						</div>										
+					
+					</div>
+				
+				
+				<% } %>
+			
+			</div>`;
+		
+        //--------------------------------------------------------------------------------
+		var template_record = `
+			<h5>
+				
+				<%- data.name %>
+				
+			</h5>
+			
+			<span style="color:rgb(64,64,64);">			
+				<%- data.description %>
+			</span>
+
+			<div>
+			<% for(var i in data.creator) {%>
+				<div class="chip">
+					<%- data.creator[i] %>
+				</div>
+			<% } %>	
+			</div>
+			
+			<% if (data.doi)  {%>
+				<a href="https://doi.org/<%- data.doi %>">https://doi.org/<%- data.doi %></a>
+			<% } %>											
+
+			<% if (data.pdf)  {%>
+				<a href="<%- data.pdf %>"><%- data.pdf %></a>
+			<% } %>											
+			
+
+			
+			
+		`;		
+		
+        //--------------------------------------------------------------------------------
+		function show_record(id) {
+		
+			if (id.match(/%23/)) {
+			} else {
+				id = encodeURI(id);
+			}
+		
+			$.getJSON('../proxy.php?url=' 
+					+ encodeURI('http://user:7WbQZedlAvzQ@35.204.73.93/elasticsearch/wikispecies/_doc/' + id)
+					+ '&callback=?',
+				function(data){ 
+					if (data._source) {
+	
+						// Render template 	
+						html = ejs.render(template_record, { data: data._source.search_result_data });
+
+						// Display
+						document.getElementById('modal-content').innerHTML = html;
+						$('#modal').modal('open');
+					}
+				}
+			);
+		}
+		
+        //--------------------------------------------------------------------------------
+		// http://stackoverflow.com/a/11407464
+		$(document).keypress(function(event){		
+			var keycode = (event.keyCode ? event.keyCode : event.which);			
+			if(keycode == '13'){
+				search();   
+			}
+		});    
+    
+        //--------------------------------------------------------------------------------
+		//http://stackoverflow.com/a/25359264
+		$.urlParam = function(name){
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+			if (results==null){
+			   return null;
+			}
+			else{
+			   return results[1] || 0;
+			}
+		}        
+		
+        //--------------------------------------------------------------------------------
+		function search() {      
+      		document.activeElement.blur();
+      
+			var q = document.getElementById('query').value;
+			
+		$.getJSON('api.php?q=' 
+				+ encodeURI(q)
+				+ '&callback=?',
+			function(data){
+			
+				console.log(JSON.stringify(data, null, 2));
+				
+				html = ejs.render(template_results, { item: data });
+				document.getElementById('results').innerHTML = html;
+	
+			
+			
+			
+			 
+			
+			}
+		);  			
+
+
+		}		
+		
+		
+	
+	
+	</script>
+	
+  <script type="text/javascript">
+//<![CDATA[
+
+    window.onload=function(){
+      
+$(document).ready(function() {
+  $('#modal').modal();  
+});
+
+
+    }
+
+//]]></script>
+	
+	
+</head>
+<body>
+	<div class="container"> 
+	<!-- <div> -->
+
+	<!-- search box -->
+	<div class="row">
+		<div class="input-field col s12">
+			<i class="material-icons prefix">search</i>
+			<input style="font-size:2em;" type="text" id="query"  placeholder="Search">
+		</div>
+		<!-- <button class="btn-large type="submit" style="font-size:2em;" id="search" onclick="search();">Find</button> -->
+	</div>
+	
+   
+<!-- Modal popup -->
+<div id="modal" class="modal" style="z-index: 1003; display: none; opacity: 0; transform: scaleX(0.7); top: 4%;">
+  <div class="modal-content">    
+    <div id="modal-content">Content</div>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" class=" modal-action modal-close btn-flat"><i class="material-icons left">clear</i>Close</a>
+  </div>
+</div>
+	
+	<div id="results">
+	</div>
+	
+	<div id="output">
+	</div>
+	
+	</div>
+  
+  <script>
+  		// do we have a URL parameter?
+		var query = $.urlParam('q');
+		if (query) {
+		   query = decodeURIComponent(query);
+		   $('#query').val(query); 
+		   search();
+		}
+  </script>
+  
+
+
+</body>
+</html>
+
