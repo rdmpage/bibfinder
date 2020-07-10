@@ -362,6 +362,8 @@ $filename 	= 'sources/taiwania.txt';
 $filename 	= 'sources/0001-6799.txt';
 $filename 	= 'sources/1681-5556.txt';
 $filename 	= 'sources/0289-3568.txt';
+$filename 	= 'sources/1005-9628.txt';
+$filename 	= 'sources/0374-5481.txt';
 
 $file_handle = fopen($filename, "r");
 while (!feof($file_handle)) 
