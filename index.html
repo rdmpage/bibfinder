@@ -25,8 +25,13 @@
 	<!-- <script src="js/jquery-1.11.2.min.js"></script> -->
 	<!-- <script src="js/ejs.js"></script> -->
 	
+	<script src="js/citation.js" type="text/javascript"></script>
 	
+	<script>
+		const Cite = require('citation-js')
+	</script>
 	
+
 	<script>
 	
 	// https://osric.com/chris/accidental-developer/2012/11/balancing-tags-in-html-and-xhtml-excerpts/
@@ -116,11 +121,15 @@ function balance(string) {
 						    			logoUrl = "images/logos/jstor.svg";
 						    		}
 						    		
-						    		// https://doi.org/10.18942/bunruichiri.KJ00001078485
+						    		// J-STAGE DOIs
 						    		if (item.dataFeedElement[i].url.match(/10.18942/)) {
 						    			logoUrl = "images/logos/jstage.svg";
 						    		}
 						    		
+						    		if (item.dataFeedElement[i].url.match(/10.2476/)) {
+						    			logoUrl = "images/logos/jstage.svg";
+						    		}
+						    								    		
 						    		// wangfang
 						    		if (item.dataFeedElement[i].url.match(/wanfang/)) {
 						    			logoUrl = "images/logos/wanfang.svg";
@@ -197,6 +206,7 @@ function balance(string) {
 								<% } %>
 
 					
+							<a class="btn" onclick="show_cite('<%- item.dataFeedElement[i]["@id"] %>');"><i class="material-icons">format_quote</i></a>					
 				
 						
 
@@ -273,21 +283,45 @@ function balance(string) {
 		`;		
 		
         //--------------------------------------------------------------------------------
-		function show_record(id) {
-		
-			if (id.match(/%23/)) {
-			} else {
-				id = encodeURI(id);
-			}
-		
-			$.getJSON('../proxy.php?url=' 
-					+ encodeURI('http://user:7WbQZedlAvzQ@35.204.73.93/elasticsearch/wikispecies/_doc/' + id)
+		function show_cite(id) {
+				
+			$.getJSON('api.php?id=' 
+					+ id
 					+ '&callback=?',
 				function(data){ 
 					if (data._source) {
-	
-						// Render template 	
-						html = ejs.render(template_record, { data: data._source.search_result_data });
+					
+						var data = new Cite(data._source.search_display.csl);
+											
+						var template_cite = `
+						<h5>Cite</h5>
+						<table>
+							<tr>
+								<td style="vertical-align:top;font-weight:bold;">APA</td>
+								<td>
+									<%- data.format('bibliography', {format: 'html', template: 'apa', lang: 'en' }); %>
+								</td>
+							</tr>
+							<tr>
+								<td style="vertical-align:top;font-weight:bold;">BibTeX</td>
+								<td>
+									<div style="font-family:monospace;white-space:pre-wrap;">
+<%=	data.format('bibtex'); %>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td style="vertical-align:top;font-weight:bold;">RIS</td>
+								<td>
+									<div style="font-family:monospace;white-space:pre-wrap;">
+<%=	data.format('ris'); %>
+									</div>
+								</td>
+							</tr>
+						</table>										
+						`;
+					
+						var html = ejs.render(template_cite, { data: data });					
 
 						// Display
 						document.getElementById('modal-content').innerHTML = html;
@@ -296,6 +330,8 @@ function balance(string) {
 				}
 			);
 		}
+		
+		
 		
         //--------------------------------------------------------------------------------
 		// http://stackoverflow.com/a/11407464
