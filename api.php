@@ -41,7 +41,7 @@ function display_one ($id, $format= '', $callback = '')
 	$obj = null;
 	$status = 404;
 		
-	$data = $elastic->send('GET', '_doc/' . urlencode($id));
+	$data = $elastic->send('GET', '_doc/' . $id);
 	
 	if ($data != '')
 	{
