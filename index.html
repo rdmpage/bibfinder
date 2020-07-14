@@ -291,7 +291,14 @@ function balance(string) {
 				function(data){ 
 					if (data._source) {
 					
-						var data = new Cite(data._source.search_display.csl);
+						var csl = new Cite(data._source.search_display.csl);
+						
+						if (csl.title) {
+							csl.title = csl.title.replace(/^\s+/, '');
+							csl.title = csl.title.replace(/\s+$/, '');
+						}
+							
+						console.log(csl);
 											
 						var template_cite = `
 						<h5>Cite</h5>
@@ -300,14 +307,6 @@ function balance(string) {
 								<td style="vertical-align:top;font-weight:bold;">APA</td>
 								<td>
 									<%- data.format('bibliography', {format: 'html', template: 'apa', lang: 'en' }); %>
-								</td>
-							</tr>
-							<tr>
-								<td style="vertical-align:top;font-weight:bold;">BibTeX</td>
-								<td>
-									<div style="font-family:monospace;white-space:pre-wrap;">
-<%=	data.format('bibtex'); %>
-									</div>
 								</td>
 							</tr>
 							<tr>
@@ -321,7 +320,7 @@ function balance(string) {
 						</table>										
 						`;
 					
-						var html = ejs.render(template_cite, { data: data });					
+						var html = ejs.render(template_cite, { data: csl });					
 
 						// Display
 						document.getElementById('modal-content').innerHTML = html;
