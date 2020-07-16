@@ -115,6 +115,11 @@ function balance(string) {
 						    		if (item.dataFeedElement[i].url.match(/airitilibrary/)) {
 						    			logoUrl = "images/logos/airiti.svg";
 						    		}
+						    								    		
+						    		// BioOne
+						    		if (item.dataFeedElement[i].url.match(/10.2994/)) {
+						    			logoUrl = "images/logos/bioone.svg";
+						    		}						    		
 						    		
 						    		// jstor
 						    		if (item.dataFeedElement[i].url.match(/jstor/)) {
@@ -129,6 +134,12 @@ function balance(string) {
 						    		if (item.dataFeedElement[i].url.match(/10.2476/)) {
 						    			logoUrl = "images/logos/jstage.svg";
 						    		}
+						    		
+						    		
+						    		if (item.dataFeedElement[i].url.match(/www.southasiaarchive.com/)) {
+						    			logoUrl = "images/logos/saa.svg";
+						    		}
+						    		
 						    								    		
 						    		// wangfang
 						    		if (item.dataFeedElement[i].url.match(/wanfang/)) {
@@ -317,6 +328,15 @@ function balance(string) {
 									</div>
 								</td>
 							</tr>
+							<tr>
+								<td style="vertical-align:top;font-weight:bold;">BibTeX</td>
+								<td>
+									<div style="font-family:monospace;white-space:pre-wrap;">
+<%=	data.format('bibtex'); %>
+									</div>
+								</td>
+							</tr>
+							
 						</table>										
 						`;
 					
