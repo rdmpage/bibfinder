@@ -120,6 +120,11 @@ function balance(string) {
 						    		if (item.dataFeedElement[i].url.match(/10.2994/)) {
 						    			logoUrl = "images/logos/bioone.svg";
 						    		}						    		
+
+						    		// Magnolia Press (e.g., Zootaxa)
+						    		if (item.dataFeedElement[i].url.match(/10.11646/)) {
+						    			logoUrl = "images/logos/mapress.svg";
+						    		}						    		
 						    		
 						    		// jstor
 						    		if (item.dataFeedElement[i].url.match(/jstor/)) {
