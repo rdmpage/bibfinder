@@ -24,6 +24,93 @@ function nice_strip_tags($str)
 }
 
 //----------------------------------------------------------------------------------------
+// http://stackoverflow.com/questions/247678/how-does-mediawiki-compose-the-image-paths
+function sha1_to_path_array($sha1)
+{
+	preg_match('/^(..)(..)(..)/', $sha1, $matches);
+	
+	$sha1_path = array();
+	$sha1_path[] = $matches[1];
+	$sha1_path[] = $matches[2];
+	$sha1_path[] = $matches[3];
+
+	return $sha1_path;
+}
+
+//----------------------------------------------------------------------------------------
+// Return path for a sha1
+function sha1_to_path_string($sha1)
+{
+	$sha1_path_parts = sha1_to_path_array($sha1);
+	
+	$sha1_path = '/' . join("/", $sha1_path_parts) . '/' . $sha1;
+
+	return $sha1_path;
+}
+
+//--------------------------------------------------------------------------------------------------
+//http://www.php.net/manual/en/function.rmdir.php#107233
+function rrmdir($dir) {
+   if (is_dir($dir)) {
+     $objects = scandir($dir);
+     foreach ($objects as $object) {
+       if ($object != "." && $object != "..") {
+         if (filetype($dir."/".$object) == "dir") rrmdir($dir."/".$object); else unlink($dir."/".$object);
+       }
+     }
+     reset($objects);
+     rmdir($dir);
+   }
+ }
+
+
+//--------------------------------------------------------------------------------------------------
+// Create nested folders in folder "root" based on sha1
+function create_path_from_sha1($sha1, $root = '.')
+{	
+	$sha1_path_parts 	= sha1_to_path_array($sha1);
+	$sha1_path 			= sha1_to_path_string($sha1);
+	$filename 			= $root . $sha1_path;
+				
+	// If we dont have file, create directory structure for it	
+	if (!file_exists($filename))
+	{
+		$path = $root;
+		$path .= '/' . $sha1_path_parts[0];
+		if (!file_exists($path))
+		{
+			$oldumask = umask(0); 
+			mkdir($path, 0777);
+			umask($oldumask);
+		}
+		$path .= '/' . $sha1_path_parts[1];
+		if (!file_exists($path))
+		{
+			$oldumask = umask(0); 
+			mkdir($path, 0777);
+			umask($oldumask);
+		}
+		$path .= '/' . $sha1_path_parts[2];
+		if (!file_exists($path))
+		{
+			$oldumask = umask(0); 
+			mkdir($path, 0777);
+			umask($oldumask);
+		}
+		$path .= '/' . $sha1;
+		if (!file_exists($path))
+		{
+			$oldumask = umask(0); 
+			mkdir($path, 0777);
+			umask($oldumask);
+		}
+	}
+	
+	return $filename;
+}
+
+
+//----------------------------------------------------------------------------------------
 function csl_to_elastic ($csl, $guid)
 {
 	$doc = new stdclass;
@@ -39,7 +126,7 @@ function csl_to_elastic ($csl, $guid)
 	$doc->search_data->fulltext_terms = array();
 	$doc->search_data->fulltext_terms_boosted = array();
 		
-	$doc->id = md5($guid);
+	$doc->id = md5(strtolower($guid));
 	$doc->search_data->cluster_id = $doc->id;	
 	
 	foreach ($csl as $k => $v)
@@ -300,6 +387,9 @@ function csl_to_elastic ($csl, $guid)
 		}
 	}
 	
+	// Cluster based on identifiers (need rules of precedence)
+	
+	
 	// Generate search terms
 	$doc->search_data->fulltext = join(" ", $doc->search_data->fulltext_terms);
 	unset($doc->search_data->fulltext_terms);
@@ -357,6 +447,7 @@ if (0)
 
 // Load from file
 $source 	= 'local';
+
 $filename 	= 'source.txt';
 $filename 	= 'sources/taiwania.txt';
 $filename 	= 'sources/0001-6799.txt';
@@ -364,89 +455,225 @@ $filename 	= 'sources/1681-5556.txt';
 $filename 	= 'sources/0289-3568.txt';
 $filename 	= 'sources/1005-9628.txt';
 $filename 	= 'sources/0374-5481.txt';
+$filename 	= 'sources/0524-4994.txt';
+$filename 	= 'sources/0001-5202.txt';
+$filename 	= 'sources/0161-8202.txt';
+$filename 	= 'sources/0028-0119.txt';
+$filename 	= 'sources/0387-9089.txt';
+$filename 	= 'sources/1341-1160.txt';
+$filename 	= 'sources/test.txt';
+
+$filename 	= 'sources/0001-5202.txt';
+$filename 	= 'sources/0022-8567.txt';
+$filename 	= 'sources/0022-1511.txt';
+$filename 	= 'sources/1578-665X.txt';
+$filename 	= 'sources/1808-9798.txt';
+
+$filename 	= 'sources/rsz-bioone.txt'; // BioOne
+
+$filename 	= 'sources/bengal.txt'; 
+$filename 	= 'sources/nl.txt'; 
+$filename 	= 'sources/0375-099X.txt'; 
+$filename 	= 'sources/tropical-zoology.txt'; 
+$filename 	= 'sources/0028-7199.txt'; 
+$filename 	= 'sources/0033-2615.txt';
+
+//$filename 	= 'sources/1000-7482.txt'; // Entomotaxonomia test
+
+$filename 	= 'sources/zootaxa.txt';
+
+// bionames
+$filename 	= 'sources/bionames.txt';
+$source 	= 'bionames';
+
+if (1)
+{
+	// datacite
+	$filename 	= 'sources/datacite.txt';
+	$source 	= 'datacite';
+}
+
+if (0)
+{
+	// biostor
+	$filename 	= 'sources/biostor.txt';
+	$source 	= 'biostor';
+}
+
+
+/*
+// RSZ, note that because I use DOI as guid this overwrites local version (harvested from BioOne)
+$source 	= 'datacite';
+$filename 	= 'sources/rsz-zenodo.txt'; // Zenodo
+*/
+
+$counter = 1;
 
 $file_handle = fopen($filename, "r");
 while (!feof($file_handle)) 
 {
 	$guid = trim(fgets($file_handle));
-
-	$obj = null;
 	
-	switch ($source)
+	if (preg_match('/^#/', $guid))
 	{
-		case 'datacite':
-		case 'medra':
-			$url = 'https://doi.org/' . $guid;	
-			$json = get($url, 'application/vnd.citationstyles.csl+json');
-			$obj = json_decode($json);
-			break;
-			
-		case 'local':
-		case 'unknown':
-		default:
-			$url = '';
-			
-			// DOI
-			if (preg_match('/^10./', $guid))
-			{
-				$url = 'http://localhost/~rpage/microcitation/www/citeproc-api.php?guid=' . urlencode($guid);
-			}
-	
-			// URL
-			if (preg_match('/^http./', $guid))
-			{
-				$url = 'http://localhost/~rpage/microcitation/www/citeproc-api.php?guid=' . urlencode($guid);
-			}
-	
-			// Biostor
-			if (preg_match('/^biostor/', $guid))
-			{
-				$url = 'https://biostor.org/api.php?id=' . $guid . '&format=citeproc';
-			}
-
-			if ($url != '')
-			{
-				$json = get($url);
-				$obj = json_decode($json);
-			}
-			break;
+		// skip
 	}
-	
-	if ($obj)
+	else
 	{
-		// CSL
-		print_r($obj);
-		
-		// Thumbnail?
-		
-		if (isset($obj->JSTOR))
-		{
-			unset($obj->thumbnail);
-			
-			$thumbnail = get_jstor_thumbnail($obj->JSTOR);
-			if ($thumbnail != '')
-			{
-				$obj->thumbnail = $thumbnail;
-			}
-		}
-		
-		if (isset($obj->thumbnailUrl))
-		{
-			$obj->thumbnail = $obj->thumbnailUrl;
-			unset($obj->thumbnailUrl);
-		}
-		
-		$doc = csl_to_elastic($obj, $guid);
-
-		print_r($doc);
-
-		$elastic_doc = new stdclass;
-		$elastic_doc->doc = $doc;
-		$elastic_doc->doc_as_upsert = true;
-		$elastic->send('POST',  '_doc/' . urlencode($elastic_doc->doc->id). '/_update', json_encode($elastic_doc));					
-	}
+		$hash = md5($guid);
 	
+		$cache_dir = dirname(__FILE__) . '/cache';
+		$hash_path = create_path_from_sha1($hash, $cache_dir);
+	
+		$cached_file = $hash_path . '/' . $hash . '.json';
+	
+		$obj = null;
+	 
+		if (!file_exists($cached_file))
+		{
+			echo "Fetching...\n";
+		
+			switch ($source)
+			{
+				case 'bionames':
+					$sici = $guid;
+					$sici = preg_replace('/https?:\/\/bionames.org\/references\//', '', $guid);
+					$url = 'http://bionames.org/api/api_citeproc.php?id=' . $sici . '&style=csljson';
+					$json = get($url);
+				
+					// save CSL in cache nicely formatted
+					$obj = json_decode($json);				
+					file_put_contents($cached_file, json_encode($obj, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+			
+					// get server a break
+					if (($counter++ % 10) == 0)
+					{
+						$rand = rand(1000000, 3000000);
+						echo "\n ...sleeping for " . round(($rand / 1000000),2) . ' seconds' . "\n\n";
+						usleep($rand);
+					}
+					break;		
+	
+				case 'datacite':
+				case 'medra':
+					$url = 'https://doi.org/' . $guid;	
+					$json = get($url, 'application/vnd.citationstyles.csl+json');
 
+					// save CSL in cache nicely formatted
+					$obj = json_decode($json);				
+					file_put_contents($cached_file, json_encode($obj, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+					// get server a break
+					if (($counter++ % 10) == 0)
+					{
+						$rand = rand(1000000, 3000000);
+						echo "\n ...sleeping for " . round(($rand / 1000000),2) . ' seconds' . "\n\n";
+						usleep($rand);
+					}
+
+					break;
+				
+				case 'biostor':
+					if (preg_match('/https?:\/\/biostor.org\/reference\/(?<id>\d+)/', $guid, $m))
+					{
+						$url = 'https://biostor.org/api.php?id=biostor-' . $m['id'] . '&format=citeproc';
+						$json = get($url);
+					
+						// save CSL in cache nicely formatted
+						$obj = json_decode($json);				
+						file_put_contents($cached_file, json_encode($obj, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+					}
+					// get server a break
+					if (($counter++ % 10) == 0)
+					{
+						$rand = rand(1000000, 3000000);
+						echo "\n ...sleeping for " . round(($rand / 1000000),2) . ' seconds' . "\n\n";
+						usleep($rand);
+					}
+				
+					break;
+			
+				case 'local':
+				case 'unknown':
+				default:
+					$url = '';
+			
+					// DOI
+					if (preg_match('/^10./', $guid))
+					{
+						$url = 'http://localhost/~rpage/microcitation/www/citeproc-api.php?guid=' . urlencode($guid);
+					}
+	
+					// URL
+					if (preg_match('/^http./', $guid))
+					{
+						$url = 'http://localhost/~rpage/microcitation/www/citeproc-api.php?guid=' . urlencode($guid);
+					}
+	
+					// Biostor
+					if (preg_match('/^biostor/', $guid))
+					{
+						$url = 'https://biostor.org/api.php?id=' . $guid . '&format=citeproc';
+					}
+
+					if ($url != '')
+					{
+						$json = get($url);
+					
+						// save CSL in cache nicely formatted
+						$obj = json_decode($json);				
+						file_put_contents($cached_file, json_encode($obj, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+					
+					}
+					break;
+			}
+
+
+		}
+		else
+		{
+			echo "Cached...\n";
+		}
+	
+		$json = file_get_contents($cached_file);
+		$obj = json_decode($json);
+	
+	
+		if ($obj)
+		{
+			// CSL
+			print_r($obj);
+		
+			// Thumbnail?
+		
+			if (isset($obj->JSTOR))
+			{
+				unset($obj->thumbnail);
+			
+				$thumbnail = get_jstor_thumbnail($obj->JSTOR);
+				if ($thumbnail != '')
+				{
+					$obj->thumbnail = $thumbnail;
+				}
+			}
+		
+			if (isset($obj->thumbnailUrl))
+			{
+				$obj->thumbnail = $obj->thumbnailUrl;
+				unset($obj->thumbnailUrl);
+			}
+		
+			$doc = csl_to_elastic($obj, $guid);
+
+			//print_r($doc);
+
+			$elastic_doc = new stdclass;
+			$elastic_doc->doc = $doc;
+			$elastic_doc->doc_as_upsert = true;
+			$elastic->send('POST',  '_doc/' . urlencode($elastic_doc->doc->id). '/_update', json_encode($elastic_doc));					
+		}
+	
+	}
 }
 
 ?>
