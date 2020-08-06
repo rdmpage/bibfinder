@@ -287,7 +287,26 @@ function do_search($q, $limit = 5)
 				if (isset($cluster_data->csl->JSTOR))
 				{
 					$item->jstor = $cluster_data->csl->JSTOR;
+					
+					if (!isset($item->url))
+					{
+						$item->url = 'https://www.jstor.org/' . $item->jstor;
+					}
+					
 				}
+				
+				if (isset($cluster_data->csl->CNKI))
+				{
+					// $item->jstor = $cluster_data->csl->JSTOR;
+					
+					if (!isset($item->url))
+					{
+						$item->url = 'http://www.cnki.com.cn/Article/CJFDTOTAL-' . $cluster_data->csl->CNKI . '.htm';
+					}
+					
+				}
+				
+				
 				/*
 				if (isset($cluster_data->csl->SICI))
 				{
@@ -298,8 +317,7 @@ function do_search($q, $limit = 5)
 				if (isset($cluster_data->csl->WIKIDATA))
 				{
 					$item->sameAs[] = 'http://www.wikidata.org/entity/' . $cluster_data->csl->WIKIDATA;
-				}
-				
+				}				
 			
 				if (isset($cluster_data->csl->thumbnail))
 				{
