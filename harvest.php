@@ -109,6 +109,28 @@ function create_path_from_sha1($sha1, $root = '.')
 	return $filename;
 }
 
+//----------------------------------------------------------------------------------------
+function clean_guid($guid)
+{
+	// DOIs are lower case
+	if (preg_match('/^10./', $guid))
+	{
+		$guid = strtolower($guid);		
+	}
+	
+	// JSTOR is HTTPS
+	if (preg_match('/jstor.org/', $guid))
+	{
+		if (preg_match('/jstor.org\/stable\/(?<id>.*)/', $guid, $m))
+		{
+			$guid = 'https://www.jstor.org/stable/' . strtolower($m['id']);		
+		}
+	}
+	
+
+	return $guid;
+}
+
 
 //----------------------------------------------------------------------------------------
 function csl_to_elastic ($csl, $guid)
@@ -370,7 +392,7 @@ function csl_to_elastic ($csl, $guid)
 				$doc->search_display->doi = strtolower($v);
 			
 				$doc->search_data->fulltext_terms[] = $v;
-				$doc->search_data->cluster_id = md5(strtolower($v));
+				
 				break;
 				
 			case 'URL':
@@ -388,6 +410,32 @@ function csl_to_elastic ($csl, $guid)
 	}
 	
 	// Cluster based on identifiers (need rules of precedence)
+	// also need to have a canonical version of GUID that is used by all
+	// uses of that GUID, both as id for record and cluster_id
+	$cluster_id = '';
+	
+	if ($cluster_id == '')
+	{
+		if (isset($csl->DOI))
+		{
+			$cluster_id = md5(strtolower($csl->DOI));
+		}
+	}
+	
+	if ($cluster_id == '')
+	{
+		if (isset($csl->JSTOR))
+		{
+			$url = 'https://www.jstor.org/stable/' . $csl->JSTOR;
+			$cluster_id = md5($url);
+		}
+	}	
+	
+	// Update cluster_id to GUID
+	if ($cluster_id != '')
+	{
+		$doc->search_data->cluster_id = $cluster_id;
+	}
 	
 	
 	// Generate search terms
@@ -482,22 +530,32 @@ $filename 	= 'sources/0033-2615.txt';
 
 $filename 	= 'sources/zootaxa.txt';
 
-// bionames
-$filename 	= 'sources/bionames.txt';
-$source 	= 'bionames';
-
 if (1)
+{
+	// bionames
+	$filename 	= 'sources/bionames.txt';
+	$source 	= 'bionames';
+}
+
+if (0)
 {
 	// datacite
 	$filename 	= 'sources/datacite.txt';
 	$source 	= 'datacite';
 }
 
-if (0)
+if (1)
 {
 	// biostor
 	$filename 	= 'sources/biostor.txt';
 	$source 	= 'biostor';
+}
+
+if (0)
+{
+	// test
+	$filename 	= 'sources/test.txt';
+	$source 	= 'local';
 }
 
 
@@ -508,6 +566,8 @@ $filename 	= 'sources/rsz-zenodo.txt'; // Zenodo
 */
 
 $counter = 1;
+
+$force = true;
 
 $file_handle = fopen($filename, "r");
 while (!feof($file_handle)) 
@@ -529,7 +589,7 @@ while (!feof($file_handle))
 	
 		$obj = null;
 	 
-		if (!file_exists($cached_file))
+		if (!file_exists($cached_file) || $force)
 		{
 			echo "Fetching...\n";
 		
@@ -663,9 +723,16 @@ while (!feof($file_handle))
 				unset($obj->thumbnailUrl);
 			}
 		
+			echo "GUID $guid\n";
+			$guid = clean_guid($guid);
+			
+			echo "Cleaned GUID $guid\n";
+			
 			$doc = csl_to_elastic($obj, $guid);
 
 			//print_r($doc);
+			
+			//exit();
 
 			$elastic_doc = new stdclass;
 			$elastic_doc->doc = $doc;
