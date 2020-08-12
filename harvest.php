@@ -6,130 +6,8 @@ require_once(dirname(__FILE__) . '/lib.php');
 require_once(dirname(__FILE__) . '/elastic.php');
 require_once(dirname(__FILE__) . '/thumbnails/thumbnails.php');
 
-//----------------------------------------------------------------------------------------
-function nice_strip_tags($str)
-{
-	$str = preg_replace('/</u', ' <', $str);
-	$str = preg_replace('/>/u', '> ', $str);
-	
-	$str = strip_tags($str);
-	
-	$str = preg_replace('/\s\s+/u', ' ', $str);
-	
-	$str = preg_replace('/^\s+/u', '', $str);
-	$str = preg_replace('/\s+$/u', '', $str);
-	
-	return $str;
-	
-}
-
-//----------------------------------------------------------------------------------------
-// http://stackoverflow.com/questions/247678/how-does-mediawiki-compose-the-image-paths
-function sha1_to_path_array($sha1)
-{
-	preg_match('/^(..)(..)(..)/', $sha1, $matches);
-	
-	$sha1_path = array();
-	$sha1_path[] = $matches[1];
-	$sha1_path[] = $matches[2];
-	$sha1_path[] = $matches[3];
-
-	return $sha1_path;
-}
-
-//----------------------------------------------------------------------------------------
-// Return path for a sha1
-function sha1_to_path_string($sha1)
-{
-	$sha1_path_parts = sha1_to_path_array($sha1);
-	
-	$sha1_path = '/' . join("/", $sha1_path_parts) . '/' . $sha1;
-
-	return $sha1_path;
-}
-
-//--------------------------------------------------------------------------------------------------
-//http://www.php.net/manual/en/function.rmdir.php#107233
-function rrmdir($dir) {
-   if (is_dir($dir)) {
-     $objects = scandir($dir);
-     foreach ($objects as $object) {
-       if ($object != "." && $object != "..") {
-         if (filetype($dir."/".$object) == "dir") rrmdir($dir."/".$object); else unlink($dir."/".$object);
-       }
-     }
-     reset($objects);
-     rmdir($dir);
-   }
- }
-
-
-//--------------------------------------------------------------------------------------------------
-// Create nested folders in folder "root" based on sha1
-function create_path_from_sha1($sha1, $root = '.')
-{	
-	$sha1_path_parts 	= sha1_to_path_array($sha1);
-	$sha1_path 			= sha1_to_path_string($sha1);
-	$filename 			= $root . $sha1_path;
-				
-	// If we dont have file, create directory structure for it	
-	if (!file_exists($filename))
-	{
-		$path = $root;
-		$path .= '/' . $sha1_path_parts[0];
-		if (!file_exists($path))
-		{
-			$oldumask = umask(0); 
-			mkdir($path, 0777);
-			umask($oldumask);
-		}
-		$path .= '/' . $sha1_path_parts[1];
-		if (!file_exists($path))
-		{
-			$oldumask = umask(0); 
-			mkdir($path, 0777);
-			umask($oldumask);
-		}
-		$path .= '/' . $sha1_path_parts[2];
-		if (!file_exists($path))
-		{
-			$oldumask = umask(0); 
-			mkdir($path, 0777);
-			umask($oldumask);
-		}
-		$path .= '/' . $sha1;
-		if (!file_exists($path))
-		{
-			$oldumask = umask(0); 
-			mkdir($path, 0777);
-			umask($oldumask);
-		}
-	}
-	
-	return $filename;
-}
-
-//----------------------------------------------------------------------------------------
-function clean_guid($guid)
-{
-	// DOIs are lower case
-	if (preg_match('/^10./', $guid))
-	{
-		$guid = strtolower($guid);		
-	}
-	
-	// JSTOR is HTTPS
-	if (preg_match('/jstor.org/', $guid))
-	{
-		if (preg_match('/jstor.org\/stable\/(?<id>.*)/', $guid, $m))
-		{
-			$guid = 'https://www.jstor.org/stable/' . strtolower($m['id']);		
-		}
-	}
-	
-
-	return $guid;
-}
+require_once(dirname(__FILE__) . '/sha1.php');
+require_once(dirname(__FILE__) . '/utils.php');
 
 
 //----------------------------------------------------------------------------------------
@@ -544,7 +422,7 @@ if (0)
 	$source 	= 'datacite';
 }
 
-if (1)
+if (0)
 {
 	// biostor
 	$filename 	= 'sources/biostor.txt';
@@ -599,6 +477,8 @@ while (!feof($file_handle))
 					$sici = $guid;
 					$sici = preg_replace('/https?:\/\/bionames.org\/references\//', '', $guid);
 					$url = 'http://bionames.org/api/api_citeproc.php?id=' . $sici . '&style=csljson';
+					
+					//echo $url . "\n";
 					$json = get($url);
 				
 					// save CSL in cache nicely formatted
@@ -665,7 +545,7 @@ while (!feof($file_handle))
 					}
 	
 					// URL
-					if (preg_match('/^http./', $guid))
+					if (preg_match('/^http/', $guid))
 					{
 						$url = 'http://localhost/~rpage/microcitation/www/citeproc-api.php?guid=' . urlencode($guid);
 					}
@@ -679,6 +559,8 @@ while (!feof($file_handle))
 					if ($url != '')
 					{
 						$json = get($url);
+						
+						//echo $json;
 					
 						// save CSL in cache nicely formatted
 						$obj = json_decode($json);				
