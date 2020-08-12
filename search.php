@@ -92,6 +92,8 @@ function do_search($q, $limit = 5)
 	$output->{'@graph'}[0]->{'@id'} = "http://example.rss";
 	$output->{'@graph'}[0]->{'@type'} = "DataFeed";
 	$output->{'@graph'}[0]->dataFeedElement = array();
+	
+	
 
 	$clusters = array();
 
@@ -108,9 +110,37 @@ function do_search($q, $limit = 5)
 		{
 			$num_hits = $obj->hits->total;			
 		}
-	
-		if ($num_hits > 0)
+		
+		$time = '';
+		if ($obj->took > 1000)
 		{
+			$time = '(' . floor($obj->took/ 1000) . ' seconds)';
+		}
+		else
+		{
+			$time = '(' . round($obj->took/ 1000, 2) . ' seconds)';
+		}
+		
+		if ($num_hits == 0)
+		{
+			// Describe search
+			$output->{'@graph'}[0]->description = "No results " . $time;
+		}
+		else
+		{
+			// Describe search
+			if ($obj->hits->total == 1)
+			{
+				$output->{'@graph'}[0]->description = "One hit ";
+			}
+			else
+			{
+				$output->{'@graph'}[0]->description = $obj->hits->total . " hits ";
+			}
+			
+			$output->{'@graph'}[0]->description .=  $time;
+
+
 			// Get list of clusters				
 			foreach ($obj->aggregations->by_cluster_id->buckets as $bucket)
 			{
@@ -129,6 +159,7 @@ function do_search($q, $limit = 5)
 			
 				$clusters[$cluster_id][$hit->_source->id] = $hit->_source->search_display;
 			}
+			
 	
 		}
 

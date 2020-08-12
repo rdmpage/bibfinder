@@ -87,7 +87,10 @@ function balance(string) {
 			<% item = item['@graph'][0]; %>
 			
 			<div>
-			
+				<div class="row">
+					<%- item.description %>
+				</div>
+				
 				<% for (var i in item.dataFeedElement) { %>
 					<div class="row" style="margin-bottom:4em;">
 					
@@ -216,14 +219,20 @@ function balance(string) {
 							</div>
 					
 							<div>
-							
+							<!--
 								<% if (item.dataFeedElement[i].numberOfItems > 1)  {%>
 									<span class="badge new" data-badge-caption="versions"><%- item.dataFeedElement[i].numberOfItems %></span>					
 								<% } %>
+							-->
+							
+							<!-- btn-flat for no background colour, btn for colour -->
 
 					
 							<a class="btn" onclick="show_cite('<%- item.dataFeedElement[i]["@id"] %>');"><i class="material-icons">format_quote</i></a>					
 				
+							<% if (item.dataFeedElement[i].numberOfItems > 1)  {%>
+								<a class="btn" href="?cluster=<%- item.dataFeedElement[i]['@id'] %>"><i class="material-icons">content_copy</i> <%- item.dataFeedElement[i].numberOfItems %> versions</a>					
+							<% } %>
 						
 
 							<% if (item.dataFeedElement[i].encoding)  {
@@ -236,7 +245,7 @@ function balance(string) {
 							} %>	
 							
 							<% if (item.dataFeedElement[i].doi)  {%>
-								<a class="btn" href="https://doi.org/<%- item.dataFeedElement[i].doi %>">DOI:<%- item.dataFeedElement[i].doi %></a>
+								<a class="btn blue darken-2" href="https://doi.org/<%- item.dataFeedElement[i].doi %>">DOI:<%- item.dataFeedElement[i].doi %></a>
 							<% } %>											
 
 							<% if (item.dataFeedElement[i].handle)  {%>
@@ -251,6 +260,8 @@ function balance(string) {
 							<% if (item.dataFeedElement[i].wikidata)  {%>
 								<a class="btn" href="https://www.wikidata.org/wiki/<%- item.dataFeedElement[i].wikidata %>">WIKIDATA:<%- item.dataFeedElement[i].jstor %></a>
 							<% } %>	
+							
+							
 							
 							
 							
@@ -384,6 +395,9 @@ function balance(string) {
       
 			var q = document.getElementById('query').value;
 			
+			history.pushState(null, q, '?q=' + q);	
+			document.title = q;	
+			
 		$.getJSON('api.php?q=' 
 				+ encodeURI(q)
 				+ '&callback=?',
@@ -393,17 +407,31 @@ function balance(string) {
 				
 				html = ejs.render(template_results, { item: data });
 				document.getElementById('results').innerHTML = html;
-	
-			
-			
-			
-			 
 			
 			}
 		);  			
 
 
 		}		
+		
+        //--------------------------------------------------------------------------------
+		function versions(cluster) {      
+			
+		$.getJSON('api.php?cluster=' 
+				+ encodeURI(cluster)
+				+ '&callback=?',
+			function(data){
+			
+				console.log(JSON.stringify(data, null, 2));
+				
+				html = ejs.render(template_results, { item: data });
+				document.getElementById('results').innerHTML = html;
+			
+			}
+		);  			
+
+
+		}				
 		
 		
 	
@@ -466,6 +494,11 @@ $(document).ready(function() {
 		   $('#query').val(query); 
 		   search();
 		}
+		
+		query = $.urlParam('cluster');
+		if (query) {
+		   versions(decodeURIComponent(query));
+		}		
   </script>
   
 

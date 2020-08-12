@@ -5,6 +5,8 @@ error_reporting(E_ALL);
 require_once (dirname(__FILE__) . '/api_utils.php');
 require_once (dirname(__FILE__) . '/elastic.php');
 require_once (dirname(__FILE__) . '/search.php');
+require_once (dirname(__FILE__) . '/versions.php');
+
 
 
 //--------------------------------------------------------------------------------------------------
@@ -82,6 +84,18 @@ function display_search ($q, $callback = '')
 	api_output($obj, $callback, 200);
 }
 
+//--------------------------------------------------------------------------------------------------
+// Get "versions" (members of the same cluster)
+function display_versions ($cluster, $callback = '')
+{	
+	$status = 404;
+	
+	$obj = do_versions($cluster);	
+	
+	api_output($obj, $callback, 200);
+}
+
+
 
 //--------------------------------------------------------------------------------------------------
 function main()
@@ -126,6 +140,17 @@ function main()
 			
 		}
 	}
+	
+	if (!$handled)
+	{
+		if (isset($_GET['cluster']))
+		{	
+			$cluster = $_GET['cluster'];
+			
+			display_versions($cluster, $callback);
+			$handled = true;
+		}
+	}	
 	
 	if (!$handled)
 	{

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>baseURL</key>
-	<string>http://35.204.73.93/elasticsearch/bibfinder/_doc/e29f3c1fdc6368800521d8d02b664037</string>
+	<string>http://35.204.73.93/elasticsearch/bibfinder/_doc/e9bb90fef557d509634b8d987627fd3a</string>
 	<key>followRedirect</key>
 	<true/>
 	<key>handleJSONPCallbacks</key>
