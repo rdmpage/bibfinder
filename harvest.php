@@ -11,6 +11,86 @@ require_once(dirname(__FILE__) . '/utils.php');
 
 
 //----------------------------------------------------------------------------------------
+// Generate hash to help matching works
+function v_y_fp_hash($csl)
+{
+	$hash = '';
+
+	$terms = array();
+	
+	// v-y-fp
+	
+	// volume
+	if (isset($csl->volume))
+	{
+		$terms[] = $csl->volume;
+	}
+	
+	// year
+	if (isset($csl->issued))
+	{
+		$terms[] = $csl->issued->{'date-parts'}[0][0];
+	}
+
+	// first page
+	if (isset($csl->{'page-first'}))
+	{
+		$terms[] = $csl->{'page-first'};
+	}
+	else
+	{
+		if (isset($csl->page))
+		{
+			$parts = explode('-', $csl->page);
+			$terms[] = $parts[0];
+		}
+	}
+	
+	if (count($terms) == 3)
+	{
+		$hash = join('-', $terms);
+	}
+
+	return $hash;
+}
+
+//----------------------------------------------------------------------------------------
+function cluster_id_based_on_identifier($csl)
+{
+	// Cluster based on identifiers (need rules of precedence)
+	// also need to have a canonical version of GUID that is used by all
+	// uses of that GUID, both as id for record and cluster_id
+	$cluster_id = '';
+	
+	if ($cluster_id == '')
+	{
+		if (isset($csl->DOI))
+		{
+			$cluster_id = md5(strtolower($csl->DOI));
+		}
+	}
+	
+	if ($cluster_id == '')
+	{
+		if (isset($csl->JSTOR))
+		{
+			$url = 'https://www.jstor.org/stable/' . $csl->JSTOR;
+			$cluster_id = md5($url);
+		}
+	}	
+	
+	if ($cluster_id == '')
+	{
+		if (isset($csl->HANDLE))
+		{
+			$cluster_id = md5(strtolower($csl->HANDLE));
+		}
+	}	
+	
+	return $cluster_id;
+}
+
+//----------------------------------------------------------------------------------------
 function csl_to_elastic ($csl, $guid)
 {
 	$doc = new stdclass;
@@ -25,6 +105,8 @@ function csl_to_elastic ($csl, $guid)
 	$doc->search_data->author = array();
 	$doc->search_data->fulltext_terms = array();
 	$doc->search_data->fulltext_terms_boosted = array();
+	
+	$doc->search_data->timestamp = time();
 		
 	$doc->id = md5(strtolower($guid));
 	$doc->search_data->cluster_id = $doc->id;	
@@ -290,15 +372,7 @@ function csl_to_elastic ($csl, $guid)
 	// Cluster based on identifiers (need rules of precedence)
 	// also need to have a canonical version of GUID that is used by all
 	// uses of that GUID, both as id for record and cluster_id
-	$cluster_id = '';
-	
-	if ($cluster_id == '')
-	{
-		if (isset($csl->DOI))
-		{
-			$cluster_id = md5(strtolower($csl->DOI));
-		}
-	}
+	$cluster_id = cluster_id_based_on_identifier($csl);
 	
 	if ($cluster_id == '')
 	{
@@ -315,6 +389,12 @@ function csl_to_elastic ($csl, $guid)
 		$doc->search_data->cluster_id = $cluster_id;
 	}
 	
+	// Hashes to help matching
+	$v_y_fp = v_y_fp_hash($csl);
+	if ($v_y_fp != '')
+	{
+		$doc->search_data->hash_v_y_fp = $v_y_fp;
+	}
 	
 	// Generate search terms
 	$doc->search_data->fulltext = join(" ", $doc->search_data->fulltext_terms);
@@ -429,10 +509,11 @@ if (0)
 	$source 	= 'biostor';
 }
 
-if (0)
+if (1)
 {
 	// test
 	$filename 	= 'sources/test.txt';
+	//$filename 	= 'sources/0002-8320.txt';
 	$source 	= 'local';
 }
 
@@ -612,7 +693,7 @@ while (!feof($file_handle))
 			
 			$doc = csl_to_elastic($obj, $guid);
 
-			//print_r($doc);
+			print_r($doc);
 			
 			//exit();
 
