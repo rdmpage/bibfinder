@@ -24,7 +24,7 @@ if (1)
 	$source 	= 'bionames';
 }
 
-if (1)
+if (0)
 {
 	// datacite
 	$filename 	= 'sources/datacite.txt';
@@ -38,10 +38,31 @@ if (0)
 	$source 	= 'biostor';
 }
 
-if (0)
+if (1)
 {
 	// test
 	$filename 	= 'sources/test.txt';
+	$source 	= 'local';
+}
+
+if (0)
+{
+	// test
+	$filename 	= 'sources/copeia.txt';
+	$source 	= 'local';
+}
+
+if (0)
+{
+	// test
+	$filename 	= 'sources/cnki.txt';
+	$source 	= 'local';
+}
+
+if (1)
+{
+	// test
+	$filename 	= 'sources/2095-0357.txt';
 	$source 	= 'local';
 }
 
@@ -139,6 +160,8 @@ while (!feof($file_handle))
 			case 'local':
 			case 'unknown':
 			default:
+				echo $guid . "\n";
+			
 				$url = '';
 		
 				// DOI
@@ -146,6 +169,12 @@ while (!feof($file_handle))
 				{
 					$url = 'http://localhost/~rpage/microcitation/www/citeproc-api.php?guid=' . urlencode($guid);
 				}
+				
+				// Handle
+				if (preg_match('/^\d+\//', $guid))
+				{
+					$url = 'http://localhost/~rpage/microcitation/www/citeproc-api.php?guid=' . urlencode($guid);
+				}				
 
 				// URL
 				if (preg_match('/^http./', $guid))
@@ -196,7 +225,7 @@ while (!feof($file_handle))
 			//echo "GUID $guid\n";
 			$guid = clean_guid($guid);
 			
-			$obj->id = md5($guid);
+			$obj->guid = $guid;
 			
 			//echo "Cleaned GUID $guid\n";
 			
