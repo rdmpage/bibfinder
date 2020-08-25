@@ -86,6 +86,29 @@ function balance(string) {
 		
 			<% item = item['@graph'][0]; %>
 			
+			<%
+			get_property_value = function(key, propertyName) {
+				var value = '';
+	
+				if (typeof key === 'object' && !Array.isArray(key)) {	
+					if (key.name === propertyName) {	
+						value = key.value;
+					}
+
+				} else {
+					if (Array.isArray(key)) {
+						for (var i in key) {
+							if (key[i].name === propertyName) {
+								value = key[i].value;
+							}
+						}
+					}	
+				}
+	
+				return value;
+			}
+			%>
+			
 			<div>
 				<div class="row">
 					<%- item.description %>
@@ -252,16 +275,26 @@ function balance(string) {
 								<a class="btn" href="https://hdl.handle.net/<%- item.dataFeedElement[i].handle %>">HDL:<%- item.dataFeedElement[i].handle %></a>
 							<% } %>	
 
-							<% if (item.dataFeedElement[i].jstor)  {%>
-								<a class="btn" href="https://www.jstor.org/stable/<%- item.dataFeedElement[i].jstor %>">JSTOR:<%- item.dataFeedElement[i].jstor %></a>
+							<!-- identifiers -->
+							<% if (item.dataFeedElement[i].identifier) { %>
+							
+								<%
+								// JSTOR
+								id = get_property_value(item.dataFeedElement[i].identifier, 'jstor');	  
+								if (id != '') {  %>
+									<a class="btn red darken-2" href="https://www.jstor.org/stable/<%- id %>">JSTOR:<%- id %></a>
+								<% } %>	
+								
+								<%
+								// Wikidata
+								id = get_property_value(item.dataFeedElement[i].identifier, 'wikidata');	  
+								if (id != '') {  %>
+									<a class="btn green darken-1" href="https://www.wikidata.org/wiki/<%- id %>">WIKIDATA:<%- id %></a>
+								<% } %>	
+								
+
 							<% } %>	
 
-
-							<% if (item.dataFeedElement[i].wikidata)  {%>
-								<a class="btn" href="https://www.wikidata.org/wiki/<%- item.dataFeedElement[i].wikidata %>">WIKIDATA:<%- item.dataFeedElement[i].jstor %></a>
-							<% } %>	
-							
-							
 							
 							
 							

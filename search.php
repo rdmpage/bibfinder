@@ -7,6 +7,59 @@ error_reporting(E_ALL);
 require_once(dirname(__FILE__) . '/config.inc.php');
 require_once(dirname(__FILE__) . '/elastic.php');
 
+
+//----------------------------------------------------------------------------------------
+// Return a property value if it exists, otherwise an empty string
+function get_property_value ($item, $key, $propertyName)
+{
+	$value = '';
+	
+	if (isset($item->{$key}))
+	{
+		$n = count($item->{$key});
+		$i = 0;
+		while ($value == '' && ($i < $n) )
+		{
+			if ($item->{$key}[$i]->name == $propertyName)
+			{
+				$value = $item->{$key}[$i]->value;
+			}	
+			
+			$i++;	
+		}
+	}
+	
+	return $value;
+}
+
+
+//----------------------------------------------------------------------------------------
+// Add a property value to an item. $key is the predicate that has the property,
+// e.g. "identifier" 
+function add_property_value (&$item, $key, $propertyName, $propertyValue)
+{
+	$found = false;
+	
+	$found = (get_property_value($item, $key, $propertyName) == $propertyValue);
+	
+	if (!$found)
+	{
+		// If we don't have this key then create it
+		if (!isset($item->{$key}))
+		{
+			$item->{$key} = array();		
+		}	
+	
+		$property = new stdclass;
+		$property->{"@type"} = "PropertyValue";
+		$property->name  = $propertyName;
+		$property->value = $propertyValue;
+		$item->{$key}[] = $property;
+	}
+}
+
+
+
 //----------------------------------------------------------------------------------------
 
 function do_search($q, $limit = 5)
@@ -14,7 +67,7 @@ function do_search($q, $limit = 5)
 	global $elastic;
 
 	$json = '{
-	"size":10,
+	"size":20,
 		"query": {
 		   "multi_match" : {
 		  "query": "<QUERY>",
@@ -78,12 +131,12 @@ function do_search($q, $limit = 5)
 
 	$output->{'@context'} = (object)array
 		(
-			'@vocab'	 => 'http://schema.org/',
-			'bibo' 		=> 'http://purl.org/ontology/bibo/',
-			'doi' => 'bibo:doi',
-			'handle' => 'bibo:handle',
-			'sici'	=> 'bibo:sici',
-			'dcterms' => 'http://purl.org/dc/terms/',
+			'@vocab'	 			=> 'http://schema.org/',
+			'bibo' 					=> 'http://purl.org/ontology/bibo/',
+			'doi'		 			=> 'bibo:doi',
+			'handle' 				=> 'bibo:handle',
+			'sici'					=> 'bibo:sici',
+			'dcterms' 				=> 'http://purl.org/dc/terms/',
 			'bibliographicCitation' => 'dcterms:bibliographicCitation'
 		);
 
@@ -93,8 +146,6 @@ function do_search($q, $limit = 5)
 	$output->{'@graph'}[0]->{'@type'} = "DataFeed";
 	$output->{'@graph'}[0]->dataFeedElement = array();
 	
-	
-
 	$clusters = array();
 
 	if (isset($obj->hits))
@@ -294,6 +345,8 @@ function do_search($q, $limit = 5)
 			// build list of cluster members, and extract any useful information
 			foreach ($cluster as $id => $cluster_data)
 			{
+			
+				// Add this member to list of cluster members
 				$item->itemListElement[] = $id;
 			
 				if (isset($cluster_data->csl->DOI))
@@ -317,7 +370,9 @@ function do_search($q, $limit = 5)
 				}
 				if (isset($cluster_data->csl->JSTOR))
 				{
-					$item->jstor = $cluster_data->csl->JSTOR;
+					add_property_value($item, "identifier", "jstor", $cluster_data->csl->JSTOR);
+								
+					//$item->jstor = $cluster_data->csl->JSTOR;
 					
 					if (!isset($item->url))
 					{
@@ -336,8 +391,7 @@ function do_search($q, $limit = 5)
 					}
 					
 				}
-				
-				
+								
 				/*
 				if (isset($cluster_data->csl->SICI))
 				{
@@ -347,12 +401,14 @@ function do_search($q, $limit = 5)
 				
 				if (isset($cluster_data->csl->WIKIDATA))
 				{
+					add_property_value($item, "identifier", "wikidata", $cluster_data->csl->WIKIDATA);
+					
 					$item->sameAs[] = 'http://www.wikidata.org/entity/' . $cluster_data->csl->WIKIDATA;
 				}				
 			
 				if (isset($cluster_data->csl->thumbnail))
 				{
-					$item->thumbnailUrl = $cluster_data->csl->thumbnail;
+					//$item->thumbnailUrl = $cluster_data->csl->thumbnail;
 				}
 			
 				if (isset($cluster_data->csl->link))
