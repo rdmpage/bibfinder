@@ -349,18 +349,25 @@ function do_search($q, $limit = 5)
 				// Add this member to list of cluster members
 				$item->itemListElement[] = $id;
 			
+				// DOI
 				if (isset($cluster_data->csl->DOI))
 				{
 					$item->doi = $cluster_data->csl->DOI;
+					
+					add_property_value($item, "identifier", "doi", $cluster_data->csl->DOI);					
 					
 					if (!isset($item->url))
 					{
 						$item->url = 'https://doi.org/' . $item->doi;
 					}
 				}
+				
+				// Handle
 				if (isset($cluster_data->csl->HANDLE))
 				{
 					$item->handle = $cluster_data->csl->HANDLE;
+					
+					add_property_value($item, "identifier", "handle", $cluster_data->csl->HANDLE);
 					
 					if (!isset($item->url))
 					{
@@ -368,6 +375,8 @@ function do_search($q, $limit = 5)
 					}
 					
 				}
+				
+				// JSTOR
 				if (isset($cluster_data->csl->JSTOR))
 				{
 					add_property_value($item, "identifier", "jstor", $cluster_data->csl->JSTOR);
@@ -376,14 +385,29 @@ function do_search($q, $limit = 5)
 					
 					if (!isset($item->url))
 					{
-						$item->url = 'https://www.jstor.org/' . $item->jstor;
+						$item->url = 'https://www.jstor.org/' . $cluster_data->csl->JSTOR;
 					}
 					
 				}
 				
+				// BioStor
+				if (isset($cluster_data->csl->BIOSTOR))
+				{
+					add_property_value($item, "identifier", "jstor", $cluster_data->csl->BIOSTOR);
+								
+					//$item->jstor = $cluster_data->csl->JSTOR;
+					
+					if (!isset($item->url))
+					{
+						$item->url = 'https://bisotor.org/reference/' . $item->BIOSTOR;
+					}
+					
+				}
+				
+				
 				if (isset($cluster_data->csl->CNKI))
 				{
-					// $item->jstor = $cluster_data->csl->JSTOR;
+					add_property_value($item, "identifier", "cnki", $cluster_data->csl->CNKI);
 					
 					if (!isset($item->url))
 					{
@@ -408,7 +432,7 @@ function do_search($q, $limit = 5)
 			
 				if (isset($cluster_data->csl->thumbnail))
 				{
-					//$item->thumbnailUrl = $cluster_data->csl->thumbnail;
+					$item->thumbnailUrl = $cluster_data->csl->thumbnail;
 				}
 			
 				if (isset($cluster_data->csl->link))
@@ -436,8 +460,6 @@ function do_search($q, $limit = 5)
 						}
 					}
 				}
-			
-			
 			
 			}
 	

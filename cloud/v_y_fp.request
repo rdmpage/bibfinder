@@ -5,15 +5,8 @@
 	<key>baseURL</key>
 	<string>http://35.204.73.93/elasticsearch/bibfinder/_search?pretty</string>
 	<key>bodyString</key>
-	<string>{
-	"size": 10,
-	"query": {
-		"multi_match": {
-			"query": "21-1999-495",
-			"fields": ["search_data.hash_v_y_fp"]
-		}
-	}
-}</string>
+	<string>{"size":10,
+"query":{"term":{"search_data.hash_v_y_fp.keyword": { "value":"1-1925-375"}}}}</string>
 	<key>followRedirect</key>
 	<true/>
 	<key>handleJSONPCallbacks</key>
