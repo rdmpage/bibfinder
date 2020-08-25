@@ -23,24 +23,44 @@ function nice_strip_tags($str)
 }
 
 //----------------------------------------------------------------------------------------
+// Convert a GUID string to a clean, standardised version
 function clean_guid($guid)
 {
-	// DOIs are lower case
-	if (preg_match('/^10./', $guid))
+	$done = false;
+
+	if (!$done)
 	{
-		$guid = strtolower($guid);		
-	}
-	
-	// JSTOR is HTTPS
-	if (preg_match('/jstor.org/', $guid))
-	{
-		if (preg_match('/jstor.org\/stable\/(?<id>.*)/', $guid, $m))
+		// DOIs are lower case
+		if (preg_match('/^10./', $guid))
 		{
-			$guid = 'https://www.jstor.org/stable/' . strtolower($m['id']);		
+			$guid = strtolower($guid);
+			$done = true;		
+		}
+	}
+		
+	if (!$done)
+	{		
+		// JSTOR is HTTPS
+		if (preg_match('/jstor.org/', $guid))
+		{
+			if (preg_match('/jstor.org\/stable\/(?<id>.*)/', $guid, $m))
+			{
+				$guid = 'https://www.jstor.org/stable/' . strtolower($m['id']);	
+				$done = true;		
+			}
 		}
 	}
 	
-
+	if (!$done)
+	{		
+		// Make URLs lower case
+		if (preg_match('/^http/', $guid))
+		{
+			$guid = strtolower($guid);		
+			$done = true;			
+		}	
+	}
+	
 	return $guid;
 }
 
