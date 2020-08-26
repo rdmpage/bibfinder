@@ -285,6 +285,15 @@ function balance(string) {
 									<a class="btn red darken-2" href="https://www.jstor.org/stable/<%- id %>">JSTOR:<%- id %></a>
 								<% } %>	
 								
+							
+								<%
+								// BioStor
+								id = get_property_value(item.dataFeedElement[i].identifier, 'biostor');	  
+								if (id != '') {  %>
+									<a class="btn amber darken-3" href="https://biostor.org/reference/<%- id %>">BIOSTOR:<%- id %></a>
+								<% } %>	
+								
+								
 								<%
 								// Wikidata
 								id = get_property_value(item.dataFeedElement[i].identifier, 'wikidata');	  

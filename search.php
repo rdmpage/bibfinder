@@ -393,13 +393,11 @@ function do_search($q, $limit = 5)
 				// BioStor
 				if (isset($cluster_data->csl->BIOSTOR))
 				{
-					add_property_value($item, "identifier", "jstor", $cluster_data->csl->BIOSTOR);
+					add_property_value($item, "identifier", "biostor", $cluster_data->csl->BIOSTOR);
 								
-					//$item->jstor = $cluster_data->csl->JSTOR;
-					
 					if (!isset($item->url))
 					{
-						$item->url = 'https://bisotor.org/reference/' . $item->BIOSTOR;
+						$item->url = 'https://biostor.org/reference/' . $item->BIOSTOR;
 					}
 					
 				}

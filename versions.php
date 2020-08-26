@@ -210,11 +210,13 @@ function do_versions($cluster, $limit = 100)
 				{
 					$item->description = $item->bibliographicCitation;
 				}
-		
+	
 		
 				if (isset($hit->_source->search_display->csl->DOI))
 				{
 					$item->doi = $hit->_source->search_display->csl->DOI;
+					
+					add_property_value($item, "identifier", "doi", $hit->_source->search_display->csl->DOI);
 				
 					if (!isset($item->url))
 					{
@@ -224,6 +226,8 @@ function do_versions($cluster, $limit = 100)
 				if (isset($hit->_source->search_display->csl->HANDLE))
 				{
 					$item->handle = $hit->_source->search_display->csl->HANDLE;
+					
+					add_property_value($item, "identifier", "handle", $hit->_source->search_display->csl->HANDLE);
 				
 					if (!isset($item->url))
 					{
@@ -233,19 +237,32 @@ function do_versions($cluster, $limit = 100)
 				}
 				if (isset($hit->_source->search_display->csl->JSTOR))
 				{
-					$item->jstor = $hit->_source->search_display->csl->JSTOR;
-				
+					add_property_value($item, "identifier", "jstor", $hit->_source->search_display->csl->JSTOR);
+									
 					if (!isset($item->url))
 					{
-						$item->url = 'https://www.jstor.org/' . $item->jstor;
+						$item->url = 'https://www.jstor.org/' . $hit->_source->search_display->csl->jstor;
 					}
 				
 				}
+				
+				
+				// BioStor
+				if (isset($hit->_source->search_display->csl->BIOSTOR))
+				{
+					add_property_value($item, "identifier", "biostor", $hit->_source->search_display->csl->BIOSTOR);
+								
+					if (!isset($item->url))
+					{
+						$item->url = 'https://biostor.org/reference/' . $hit->_source->search_display->BIOSTOR;
+					}
+					
+				}				
 			
 				if (isset($hit->_source->search_display->csl->CNKI))
 				{
-					// $item->jstor = $cluster_data->csl->JSTOR;
-				
+					add_property_value($item, "identifier", "cnki", $hit->_source->search_display->csl->CNKI);	
+								
 					if (!isset($item->url))
 					{
 						$item->url = 'http://www.cnki.com.cn/Article/CJFDTOTAL-' . $hit->_source->search_display->csl->CNKI . '.htm';
@@ -256,8 +273,12 @@ function do_versions($cluster, $limit = 100)
 			
 				if (isset($hit->_source->search_display->csl->WIKIDATA))
 				{
+					add_property_value($item, "identifier", "wikidata", $hit->_source->search_display->csl->WIKIDATA);
+					
 					$item->sameAs[] = 'http://www.wikidata.org/entity/' . $hit->_source->search_display->csl->WIKIDATA;
-				}				
+				}
+				
+								
 		
 				if (isset($hit->_source->search_display->csl->thumbnail))
 				{
